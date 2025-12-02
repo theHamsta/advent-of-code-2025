@@ -43,7 +43,6 @@ fn main() -> anyhow::Result<()> {
                 part2 += num;
             }
         }
-        dbg!(part2);
     }
 
     dbg!(part1);
