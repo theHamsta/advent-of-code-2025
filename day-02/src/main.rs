@@ -8,13 +8,13 @@ fn main() -> anyhow::Result<()> {
     let mut part1 = 0;
     let mut part2 = 0;
 
+    let mut digits = Vec::new();
     for range in regex.captures_iter(input) {
         let min = range[1].parse::<i64>()?;
         let max = range[2].parse::<i64>()?;
 
         for num in min..=max {
             let mut a = num;
-            let mut digits = Vec::new();
             while a > 0 {
                 digits.push(a % 10);
                 a /= 10;
@@ -42,6 +42,7 @@ fn main() -> anyhow::Result<()> {
             if repeating.is_some() {
                 part2 += num;
             }
+            digits.clear();
         }
     }
 
