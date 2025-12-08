@@ -104,7 +104,8 @@ fn main() -> anyhow::Result<()> {
                 }
             }
 
-            if connections.values().unique().count() == 1 {
+            let first = connections.values().copied().next();
+            if connections.values().all(|v| Some(*v) == first) {
                 part2 = Some(a[0] * b[0]);
             }
         }
