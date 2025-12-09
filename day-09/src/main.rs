@@ -85,19 +85,18 @@ fn main() -> anyhow::Result<()> {
         for (&[ax, ay], &[bx, by]) in numbers.iter().tuple_windows() {
             assert!(ax == bx || ay == by);
 
-            let index_x = x_ranges.iter().position(|r| r.contains(&ax)).unwrap();
-            let index_y = y_ranges.iter().position(|r| r.contains(&ay)).unwrap();
+            let index_x = x_ranges.binary_search_by_key(&ax, |r| r.start).unwrap();
+            let index_y = y_ranges.binary_search_by_key(&ay, |r| r.start).unwrap();
             all_green[index_x + index_y * x_ranges.len()] = Type::Border;
-            let index_x = x_ranges.iter().position(|r| r.contains(&bx)).unwrap();
-            let index_y = y_ranges.iter().position(|r| r.contains(&by)).unwrap();
+            let index_x = x_ranges.binary_search_by_key(&bx, |r| r.start).unwrap();
+            let index_y = y_ranges.binary_search_by_key(&by, |r| r.start).unwrap();
             all_green[index_x + index_y * x_ranges.len()] = Type::Border;
 
             if ay == by {
                 let mut index_x = x_ranges
-                    .iter()
-                    .position(|r| r.contains(&(ax.min(bx) + 1)))
+                    .binary_search_by_key(&(ax.min(bx) + 1), |r| r.start)
                     .unwrap();
-                let index_y = y_ranges.iter().position(|r| r.contains(&ay)).unwrap();
+                let index_y = y_ranges.binary_search_by_key(&ay, |r| r.start).unwrap();
 
                 while x_ranges[index_x].end <= ax.max(bx) {
                     all_green[index_x + index_y * x_ranges.len()] = Type::Border;
@@ -106,8 +105,7 @@ fn main() -> anyhow::Result<()> {
             } else {
                 let index_x = x_ranges.iter().position(|r| r.contains(&ax)).unwrap();
                 let mut index_y = y_ranges
-                    .iter()
-                    .position(|r| r.contains(&(ay.min(by) + 1)))
+                    .binary_search_by_key(&(ay.min(by) + 1), |r| r.start)
                     .unwrap();
 
                 while y_ranges[index_y].end <= ay.max(by) {
@@ -146,10 +144,14 @@ fn main() -> anyhow::Result<()> {
                 let min_y = ay.min(by);
                 let max_x = ax.max(bx);
                 let max_y = ay.max(by);
-                let index_x_min = x_ranges.iter().position(|r| r.contains(&min_x)).unwrap() as i16;
-                let index_x_max = x_ranges.iter().position(|r| r.contains(&max_x)).unwrap() as i16;
-                let index_y_min = y_ranges.iter().position(|r| r.contains(&min_y)).unwrap() as i16;
-                let index_y_max = y_ranges.iter().position(|r| r.contains(&max_y)).unwrap() as i16;
+                let index_x_min =
+                    x_ranges.binary_search_by_key(&min_x, |r| r.start).unwrap() as i16;
+                let index_x_max =
+                    x_ranges.binary_search_by_key(&max_x, |r| r.start).unwrap() as i16;
+                let index_y_min =
+                    y_ranges.binary_search_by_key(&min_y, |r| r.start).unwrap() as i16;
+                let index_y_max =
+                    y_ranges.binary_search_by_key(&max_y, |r| r.start).unwrap() as i16;
 
                 !(index_x_min..=index_x_max)
                     .cartesian_product(index_y_min..=index_y_max)
