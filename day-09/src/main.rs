@@ -151,7 +151,7 @@ fn main() -> anyhow::Result<()> {
             .map(|([ax, ay], [bx, by])| {
                 (
                     (ax.abs_diff(bx) + 1) * (ay.abs_diff(by) + 1),
-                    ((ax, ay), (bx, by)),
+                    //((ax, ay), (bx, by)),
                 )
             })
             .max();
