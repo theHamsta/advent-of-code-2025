@@ -18,6 +18,13 @@ fn plot(x_max: i64, y_max: i64, positions: &HashMap<(i64, i64), bool>) {
     println!();
 }
 
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+enum Type {
+    Unknown,
+    Outside,
+    Border,
+}
+
 fn main() -> anyhow::Result<()> {
     //let range_regex = Regex::new(r"(\d+)-(\d+)").unwrap();
     //let number_regex = Regex::new(r"(\d+)\n").unwrap();
@@ -73,17 +80,17 @@ fn main() -> anyhow::Result<()> {
 
         numbers.push(numbers[0]);
 
-        let mut all_green = HashMap::new();
+        let mut all_green = vec![Type::Unknown; x_ranges.len() * y_ranges.len()];
 
         for (&[ax, ay], &[bx, by]) in numbers.iter().tuple_windows() {
             assert!(ax == bx || ay == by);
 
             let index_x = x_ranges.iter().position(|r| r.contains(&ax)).unwrap();
             let index_y = y_ranges.iter().position(|r| r.contains(&ay)).unwrap();
-            all_green.insert((index_x as i64, index_y as i64), true);
+            all_green[index_x + index_y * x_ranges.len()] = Type::Border;
             let index_x = x_ranges.iter().position(|r| r.contains(&bx)).unwrap();
             let index_y = y_ranges.iter().position(|r| r.contains(&by)).unwrap();
-            all_green.insert((index_x as i64, index_y as i64), true);
+            all_green[index_x + index_y * x_ranges.len()] = Type::Border;
 
             if ay == by {
                 let mut index_x = x_ranges
@@ -93,7 +100,7 @@ fn main() -> anyhow::Result<()> {
                 let index_y = y_ranges.iter().position(|r| r.contains(&ay)).unwrap();
 
                 while x_ranges[index_x].end <= ax.max(bx) {
-                    all_green.insert((index_x as i64, index_y as i64), true);
+                    all_green[index_x + index_y * x_ranges.len()] = Type::Border;
                     index_x += 1;
                 }
             } else {
@@ -104,7 +111,7 @@ fn main() -> anyhow::Result<()> {
                     .unwrap();
 
                 while y_ranges[index_y].end <= ay.max(by) {
-                    all_green.insert((index_x as i64, index_y as i64), true);
+                    all_green[index_x + index_y * x_ranges.len()] = Type::Border;
                     index_y += 1;
                 }
             }
@@ -113,22 +120,22 @@ fn main() -> anyhow::Result<()> {
         let mut todo = vec![(0, 0)];
 
         while let Some((x, y)) = todo.pop() {
-            if all_green.contains_key(&(x, y))
-                || x >= x_sorted.len() as i64
-                || y >= y_sorted.len() as i64
+            if x >= x_ranges.len() as i64
+                || y >= y_ranges.len() as i64
                 || x < 0
                 || y < 0
+                || all_green[x as usize + y as usize * x_ranges.len()] != Type::Unknown
             {
                 continue;
             }
-            all_green.insert((x, y), false);
+            all_green[x as usize + y as usize * x_ranges.len()] = Type::Outside;
             todo.push((x - 1, y));
             todo.push((x + 1, y));
             todo.push((x, y + 1));
             todo.push((x, y - 1));
         }
 
-        //plot(x_ranges.len() as i64, y_ranges.len() as i64, &all_green);
+        //plot(x_ranges.len()  as i16, y_ranges.len()  as i16, &all_green);
 
         let part2 = numbers
             .iter()
@@ -139,14 +146,16 @@ fn main() -> anyhow::Result<()> {
                 let min_y = ay.min(by);
                 let max_x = ax.max(bx);
                 let max_y = ay.max(by);
-                let index_x_min = x_ranges.iter().position(|r| r.contains(&min_x)).unwrap() as i64;
-                let index_x_max = x_ranges.iter().position(|r| r.contains(&max_x)).unwrap() as i64;
-                let index_y_min = y_ranges.iter().position(|r| r.contains(&min_y)).unwrap() as i64;
-                let index_y_max = y_ranges.iter().position(|r| r.contains(&max_y)).unwrap() as i64;
+                let index_x_min = x_ranges.iter().position(|r| r.contains(&min_x)).unwrap() as i16;
+                let index_x_max = x_ranges.iter().position(|r| r.contains(&max_x)).unwrap() as i16;
+                let index_y_min = y_ranges.iter().position(|r| r.contains(&min_y)).unwrap() as i16;
+                let index_y_max = y_ranges.iter().position(|r| r.contains(&max_y)).unwrap() as i16;
 
                 !(index_x_min..=index_x_max)
                     .cartesian_product(index_y_min..=index_y_max)
-                    .any(|(x, y)| all_green.get(&(x, y)) == Some(&false))
+                    .any(|(x, y)| {
+                        all_green[x as usize + y as usize * x_ranges.len()] == Type::Outside
+                    })
             })
             .map(|([ax, ay], [bx, by])| {
                 (
