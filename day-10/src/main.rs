@@ -1,26 +1,11 @@
-use good_lp::{Expression, coin_cbc, variable};
-use good_lp::{Solution, SolverModel, constraint, default_solver, variables};
+use good_lp::{Expression, variable};
+use good_lp::{Solution, SolverModel, variables};
 use itertools::Itertools;
 use regex::Regex;
 use std::{
     cmp::Reverse,
-    collections::{BinaryHeap, HashMap, HashSet},
+    collections::{BinaryHeap, HashSet},
 };
-
-#[allow(dead_code)]
-fn plot(x_max: i64, y_max: i64, positions: &HashMap<(i64, i64), bool>) {
-    for y in 0..=y_max {
-        for x in 0..x_max {
-            if positions.contains_key(&(x, y)) {
-                print!("{}", if positions[&(x, y)] { "." } else { "X" });
-            } else {
-                print!("Y");
-            }
-        }
-        println!();
-    }
-    println!();
-}
 
 fn main() -> anyhow::Result<()> {
     //let range_regex = Regex::new(r"(\d+)-(\d+)").unwrap();
